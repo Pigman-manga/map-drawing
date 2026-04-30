@@ -99,6 +99,30 @@ public class PageIO {
         }
     }
 
+
+    public Map<Integer, NativeImage> tryLoadAllPages() {
+        final Map<Integer, NativeImage> pages = new HashMap<>();
+        try (final var stream = Files.list(this.pagePath)) {
+            stream.filter(path -> path.getFileName().toString().endsWith(".png")).forEach(path -> {
+                final String name = path.getFileName().toString();
+                final String[] coords = name.substring(0, name.length() - 4).split("_");
+                if (coords.length != 2) {
+                    return;
+                }
+                try {
+                    final int rx = Integer.parseInt(coords[0]);
+                    final int ry = Integer.parseInt(coords[1]);
+                    final NativeImage image = NativeImage.read(Files.newInputStream(path));
+                    pages.put((rx << 16) ^ (ry & 0xFFFF), image);
+                } catch (final Exception ignored) {
+                }
+            });
+        } catch (final IOException e) {
+            MapwrightClient.LOGGER.error("Failed to list map pages in {}", this.pagePath, e);
+        }
+        return pages;
+    }
+
     // todo: codec this please ....
     public void savePins(final Map<Pin.Type, Pin> pins) {
         final Gson gson = new Gson();

@@ -10,7 +10,13 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import wawa.mapwright.MapwrightClient;
 import wawa.mapwright.data.sync.MapSyncBridge;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import wawa.mapwright.data.PageIO;
+import wawa.mapwright.data.sync.MapSyncOperation;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @EventBusSubscriber(modid = MapwrightClient.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public final class MapSyncNetworking {
@@ -34,11 +40,41 @@ public final class MapSyncNetworking {
 
     private static void handleSnapshotRequest(final MapSnapshotRequestPayload payload, final IPayloadContext context) {
         if (context.player() instanceof ServerPlayer serverPlayer) {
-            // On integrated server this mirrors the host's current map state to a joining client via server relay.
-            final List<wawa.mapwright.data.sync.MapSyncOperation> ops = MapSyncBridge.drainPending();
-            if (!ops.isEmpty()) {
-                PacketDistributor.sendToPlayer(serverPlayer, new MapSyncPayload(ops));
+            context.enqueueWork(() -> sendDiskSnapshot(serverPlayer));
+        }
+    }
+
+    private static void sendDiskSnapshot(final ServerPlayer serverPlayer) {
+        final PageIO pageIO = MapwrightClient.PAGE_MANAGER.pageIO;
+        if (pageIO == null) {
+            return;
+        }
+
+        final Map<Integer, NativeImage> images = pageIO.tryLoadAllPages();
+        final List<MapSyncOperation> batch = new ArrayList<>(1024);
+        for (final Map.Entry<Integer, NativeImage> entry : images.entrySet()) {
+            final int packed = entry.getKey();
+            final int rx = packed >> 16;
+            final int ry = (short)(packed & 0xFFFF);
+            final NativeImage image = entry.getValue();
+            for (int x = 0; x < MapwrightClient.CHUNK_SIZE; x++) {
+                for (int y = 0; y < MapwrightClient.CHUNK_SIZE; y++) {
+                    final int rgba = image.getPixelRGBA(x, y);
+                    if (rgba == 0) {
+                        continue;
+                    }
+                    batch.add(new MapSyncOperation(rx * MapwrightClient.CHUNK_SIZE + x, ry * MapwrightClient.CHUNK_SIZE + y, rgba));
+                    if (batch.size() >= 1024) {
+                        PacketDistributor.sendToPlayer(serverPlayer, new MapSyncPayload(List.copyOf(batch)));
+                        batch.clear();
+                    }
+                }
             }
+            image.close();
+        }
+
+        if (!batch.isEmpty()) {
+            PacketDistributor.sendToPlayer(serverPlayer, new MapSyncPayload(List.copyOf(batch)));
         }
     }
 
