@@ -25,7 +25,7 @@ public final class MapSyncBridge {
         }
 
         if (pending.size() >= MAX_BATCH_SIZE) {
-            pending.removeFirst();
+            pending.remove(0);
         }
         pending.add(new MapSyncOperation(x, y, rgba));
     }
