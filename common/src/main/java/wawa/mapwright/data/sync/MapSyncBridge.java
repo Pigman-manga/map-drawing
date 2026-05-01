@@ -51,6 +51,10 @@ public final class MapSyncBridge {
         return pending.size();
     }
 
+    public static synchronized boolean isApplyingRemote() {
+        return applyingRemote;
+    }
+
     public static synchronized void applyRemoteOperations(final List<MapSyncOperation> operations) {
         if (operations.isEmpty()) {
             return;

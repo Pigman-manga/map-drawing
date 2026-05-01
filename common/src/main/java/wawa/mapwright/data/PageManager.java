@@ -142,7 +142,9 @@ public class PageManager {
             return;
         }
 
-        this.snapshotPage(newPage);
+        if (!MapSyncBridge.isApplyingRemote()) {
+            this.snapshotPage(newPage);
+        }
 
         newPage.setPixel(x - rx * MapwrightClient.CHUNK_SIZE, y - ry * MapwrightClient.CHUNK_SIZE, RGBA);
         MapSyncBridge.queueLocalOperation(x, y, RGBA);
