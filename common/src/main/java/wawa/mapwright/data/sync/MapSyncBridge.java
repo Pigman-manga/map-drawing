@@ -31,12 +31,19 @@ public final class MapSyncBridge {
     }
 
     public static synchronized List<MapSyncOperation> drainPending() {
-        if (pending.isEmpty()) {
+        return drainPending(MAX_BATCH_SIZE);
+    }
+
+    public static synchronized List<MapSyncOperation> drainPending(final int maxCount) {
+        if (pending.isEmpty() || maxCount <= 0) {
             return List.of();
         }
 
-        final List<MapSyncOperation> copy = new ArrayList<>(pending);
-        pending.clear();
+        final int count = Math.min(maxCount, pending.size());
+        final List<MapSyncOperation> copy = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            copy.add(pending.remove(0));
+        }
         return copy;
     }
 

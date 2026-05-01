@@ -106,11 +106,19 @@ public final class MapSyncNetworking {
 
     private static long pack(int x, int y) { return (((long)x) << 32) | (y & 0xffffffffL); }
 
+    private static final int MAP_OPS_PER_PACKET = 384;
+    private static final int MAP_PACKETS_PER_TICK = 4;
+
     public static void flushClientPending() {
         final Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.getConnection() == null) return;
-        final var ops = MapSyncBridge.drainPending();
-        if (!ops.isEmpty()) PacketDistributor.sendToServer(new MapSyncPayload(ops));
+
+        for (int i = 0; i < MAP_PACKETS_PER_TICK; i++) {
+            final var ops = MapSyncBridge.drainPending(MAP_OPS_PER_PACKET);
+            if (ops.isEmpty()) break;
+            PacketDistributor.sendToServer(new MapSyncPayload(ops));
+        }
+
         final var pinOps = PinSyncBridge.drainPending();
         if (!pinOps.isEmpty()) PacketDistributor.sendToServer(new PinSyncPayload(pinOps));
     }
