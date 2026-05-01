@@ -84,13 +84,13 @@ publishMods {
     modLoaders.add('neoforge')
 
     modrinth {
-        accessToken = mapwrightPushTokenModrinth
+        accessToken = (project.findProperty("mapwrightPushTokenModrinth") ?: "")
         projectId = "iDYmMWwn"
         minecraftVersions.add(minecraft_version)
     }
 
     curseforge {
-        accessToken = mapwrightPushTokenCurse
+        accessToken = (project.findProperty("mapwrightPushTokenCurse") ?: "")
         projectId = "1361711"
         minecraftVersions.add(minecraft_version)
     }

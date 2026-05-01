@@ -13,18 +13,21 @@ import net.neoforged.neoforge.event.level.LevelEvent;
 import wawa.mapwright.ClientEvents;
 import wawa.mapwright.MapwrightClient;
 import wawa.mapwright.mixin.LevelRendererAccessor;
+import wawa.mapwright.neoforge.sync.MapSyncNetworking;
 
 @EventBusSubscriber(modid = MapwrightClient.MOD_ID, value = Dist.CLIENT)
 public class ClientEventsRuntime {
     @SubscribeEvent
     public static void clientTick(final ClientTickEvent.Post event) {
         ClientEvents.tick(Minecraft.getInstance());
+        MapSyncNetworking.flushClientPending();
     }
 
     @SubscribeEvent
     public static void levelLoad(final LevelEvent.Load event) {
         if (event.getLevel() instanceof final ClientLevel level) {
             ClientEvents.loadLevel(level, Minecraft.getInstance());
+            MapSyncNetworking.requestSnapshot();
         }
     }
 

@@ -8,6 +8,7 @@ import org.joml.Vector2dc;
 import org.joml.Vector2i;
 import wawa.mapwright.MapwrightClient;
 import wawa.mapwright.data.history.OperationHistory;
+import wawa.mapwright.data.sync.MapSyncBridge;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -141,9 +142,12 @@ public class PageManager {
             return;
         }
 
-        this.snapshotPage(newPage);
+        if (!MapSyncBridge.isApplyingRemote()) {
+            this.snapshotPage(newPage);
+        }
 
         newPage.setPixel(x - rx * MapwrightClient.CHUNK_SIZE, y - ry * MapwrightClient.CHUNK_SIZE, RGBA);
+        MapSyncBridge.queueLocalOperation(x, y, RGBA);
     }
 
     public int getPixelARGB(final int x, final int y) {
