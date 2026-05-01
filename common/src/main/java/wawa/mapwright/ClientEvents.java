@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.level.Level;
 import wawa.mapwright.data.sync.MapSyncBridge;
+import wawa.mapwright.data.sync.PinSyncBridge;
 import wawa.mapwright.input.InputListener;
 import wawa.mapwright.map.MapScreen;
 
@@ -20,12 +21,14 @@ public class ClientEvents {
         MapwrightClient.PAGE_MANAGER.saveAndClear();
         MapwrightClient.PAGE_MANAGER.reloadPageIO(level, client);
         MapSyncBridge.clear();
+        PinSyncBridge.clear();
     }
 
     public static void leaveServer() {
         MapwrightClient.PAGE_MANAGER.saveAndClear();
         DistantRaycast.clearCache();
         MapSyncBridge.clear();
+        PinSyncBridge.clear();
     }
 
     public static void postWorldRender(final MultiBufferSource bufferSource, final PoseStack poseStack, final float partialTick) {

@@ -9,6 +9,7 @@ import org.joml.Vector2i;
 import wawa.mapwright.MapwrightClient;
 import wawa.mapwright.data.history.OperationHistory;
 import wawa.mapwright.data.sync.MapSyncBridge;
+import wawa.mapwright.data.sync.PinSyncBridge;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -241,10 +242,12 @@ public class PageManager {
 
     public void putPin(final Pin.Type type, final Vector2dc pos) {
         this.pins.computeIfAbsent(type, Pin::new).setPosition(pos);
+        PinSyncBridge.queuePut(type, pos.x(), pos.y());
     }
 
     public void removePin(final Pin.Type type) {
         this.pins.remove(type);
+        PinSyncBridge.queueRemove(type);
     }
 
     public SpyglassPins getSpyglassPins() {
